@@ -1,0 +1,31 @@
+#include <stdio.h>
+#include <string.h>
+#include <math.h>
+#include <stdlib.h>
+
+int main() {
+    int n;
+    // Read the size of the array
+    if (scanf("%d", &n) != 1) return 0;
+
+    // Dynamically allocate memory for n integers on the heap
+    int *arr = (int*)malloc(n * sizeof(int));
+    if (arr == NULL) {
+        return 1; // Memory allocation failed
+    }
+
+    int sum = 0;
+    // Loop to read elements into the array and compute the sum
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+        sum += arr[i];
+    }
+
+    // Print the calculated sum
+    printf("%d\n", sum);
+
+    // Free the dynamically allocated memory to avoid memory leaks
+    free(arr);
+    
+    return 0;
+}
