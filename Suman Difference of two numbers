@@ -1,0 +1,24 @@
+#include <stdio.h>
+
+int main()
+{
+    // 1. Declare variables: two integers and two floats
+    int n, m;
+    float f1, f2;
+
+    // 2. Read two integers from the first line
+    scanf("%d %d", &n, &m);
+
+    // 3. Read two floats from the second line
+    scanf("%f %f", &f1, &f2);
+
+    // 4. Print sum and difference of integers
+    // Separated by a space
+    printf("%d %d\n", n + m, n - m);
+
+    // 5. Print sum and difference of floats
+    // Use %.1f to round to one decimal place
+    printf("%.1f %.1f\n", f1 + f2, f1 - f2);
+
+    return 0;
+}
