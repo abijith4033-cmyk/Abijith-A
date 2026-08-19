@@ -1,0 +1,23 @@
+#include <stdbool.h>
+
+bool isPalindrome(int x) {
+    // 1. Negative numbers cannot be palindromes (e.g., -121 reads as 121-)
+    // Also, numbers ending in 0 cannot be palindromes unless the number itself is 0
+    if (x < 0 || (x % 10 == 0 && x != 0)) {
+        return false;
+    }
+
+    int reversedHalf = 0;
+    
+    // 2. Chop off digits from the back of 'x' and build 'reversedHalf'
+    // Stop when 'x' becomes smaller than or equal to 'reversedHalf' (meaning we reached the midpoint)
+    while (x > reversedHalf) {
+        reversedHalf = (reversedHalf * 10) + (x % 10);
+        x /= 10;
+    }
+
+    // 3. Check for equality
+    // For even lengths: x should equal reversedHalf (e.g., 1221 -> x = 12, reversedHalf = 12)
+    // For odd lengths: x should equal reversedHalf / 10 to discard the middle digit (e.g., 12321 -> x = 12, reversedHalf = 123)
+    return x == reversedHalf || x == reversedHalf / 10;
+}
