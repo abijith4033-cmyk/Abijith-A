@@ -1,0 +1,114 @@
+#include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+// Simple hash map entry using linear probing for word string keys
+typedef struct {
+    char word[31]; // Max word length on LeetCode is 30 + '\0'
+    int count;
+} WordEntry;
+
+// Insert or increment word count in the hash map
+void insertWord(WordEntry* map, int size, const char* word, int val) {
+    unsigned long hash = 5381;
+    for (int i = 0; word[i] != '\0'; i++) {
+        hash = ((hash << 5) + hash) + word[i];
+    }
+    int idx = hash % size;
+    while (map[idx].word[0] != '\0') {
+        if (strcmp(map[idx].word, word) == 0) {
+            map[idx].count += val;
+            return;
+        }
+        idx = (idx + 1) % size;
+    }
+    strcpy(map[idx].word, word);
+    map[idx].count = val;
+}
+
+// Get the expected frequency count of a word from the hash map
+int getWordCount(WordEntry* map, int size, const char* word) {
+    unsigned long hash = 5381;
+    for (int i = 0; word[i] != '\0'; i++) {
+        hash = ((hash << 5) + hash) + word[i];
+    }
+    int idx = hash % size;
+    while (map[idx].word[0] != '\0') {
+        if (strcmp(map[idx].word, word) == 0) {
+            return map[idx].count;
+        }
+        idx = (idx + 1) % size;
+    }
+    return 0;
+}
+
+int* findSubstring(char* s, char** words, int wordsSize, int* returnSize) {
+    *returnSize = 0;
+    if (s == NULL || words == NULL || wordsSize == 0) return NULL;
+
+    int sLen = strlen(s);
+    int wordLen = strlen(words[0]);
+    int totalWordsLen = wordsSize * wordLen;
+
+    if (sLen < totalWordsLen) return NULL;
+
+    // Allocate results buffer for the worst-case scenario
+    int* result = (int*)malloc(sLen * sizeof(int));
+    
+    // Hash map to store frequencies of words we need to match
+    int baseMapSize = wordsSize * 2 + 1;
+    WordEntry* baseMap = (WordEntry*)calloc(baseMapSize, sizeof(WordEntry));
+    for (int i = 0; i < wordsSize; i++) {
+        insertWord(baseMap, baseMapSize, words[i], 1);
+    }
+
+    // Temporary window map buffer used for each window pass
+    WordEntry* windowMap = (WordEntry*)calloc(baseMapSize, sizeof(WordEntry));
+
+    // Try all possible starting alignments up to the length of a single word
+    for (int i = 0; i < wordLen; i++) {
+        int left = i;
+        int count = 0;
+        // Reset our window tracker map for this alignment pass
+        memset(windowMap, 0, baseMapSize * sizeof(WordEntry));
+
+        for (int right = i; right + wordLen <= sLen; right += wordLen) {
+            // Extract the current trailing word token from s
+            char currentWord[31];
+            strncpy(currentWord, s + right, wordLen);
+            currentWord[wordLen] = '\0';
+
+            int expectedCount = getWordCount(baseMap, baseMapSize, currentWord);
+
+            if (expectedCount > 0) {
+                insertWord(windowMap, baseMapSize, currentWord, 1);
+                count++;
+
+                // If we have too many instances of currentWord, shrink left side
+                while (getWordCount(windowMap, baseMapSize, currentWord) > expectedCount) {
+                    char leftWord[31];
+                    strncpy(leftWord, s + left, wordLen);
+                    leftWord[wordLen] = '\0';
+                    
+                    insertWord(windowMap, baseMapSize, leftWord, -1);
+                    count--;
+                    left += wordLen;
+                }
+
+                // If window matches total words count, record starting index
+                if (count == wordsSize) {
+                    result[(*returnSize)++] = left;
+                }
+            } else {
+                // Invalid word encountered: clear window state completely
+                memset(windowMap, 0, baseMapSize * sizeof(WordEntry));
+                count = 0;
+                left = right + wordLen;
+            }
+        }
+    }
+
+    free(baseMap);
+    free(windowMap);
+    return result;
+}
