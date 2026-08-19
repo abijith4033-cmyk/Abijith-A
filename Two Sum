@@ -1,0 +1,75 @@
+#include <stdlib.h>
+
+// Structure for Hash Table Node
+struct HashNode {
+    int key;
+    int value;
+    struct HashNode* next;
+};
+
+// Simple Hash Function
+int hash(int key, int size) {
+    int h = key % size;
+    return h < 0 ? h + size : h; // Handle negative keys
+}
+
+int* twoSum(int* nums, int numsSize, int target, int* returnSize) {
+    // Dynamic table size based on input array size
+    int tableSize = numsSize * 2; 
+    struct HashNode** hashTable = (struct HashNode**)calloc(tableSize, sizeof(struct HashNode*));
+    
+    // Allocate memory for the result array
+    int* result = (int*)malloc(2 * sizeof(int));
+    *returnSize = 0;
+
+    for (int i = 0; i < numsSize; i++) {
+        int complement = target - nums[i];
+        int complementHashIndex = hash(complement, tableSize);
+        
+        // Search for the complement in the hash table
+        struct HashNode* curr = hashTable[complementHashIndex];
+        while (curr != NULL) {
+            if (curr->key == complement) {
+                result[0] = curr->value;
+                result[1] = i;
+                *returnSize = 2;
+                
+                // Free hash table memory before returning
+                for (int j = 0; j < tableSize; j++) {
+                    struct HashNode* node = hashTable[j];
+                    while (node != NULL) {
+                        struct HashNode* temp = node;
+                        node = node->next;
+                        free(temp);
+                    }
+                }
+                free(hashTable);
+                return result;
+            }
+            curr = curr->next;
+        }
+        
+        // Complement not found, insert current number into hash table
+        int currentHashIndex = hash(nums[i], tableSize);
+        struct HashNode* newNode = (struct HashNode*)malloc(sizeof(struct HashNode));
+        newNode->key = nums[i];
+        newNode->value = i;
+        newNode->next = hashTable[currentHashIndex];
+        hashTable[currentHashIndex] = newNode;
+    }
+
+    // Clean up if no solution is found (though the problem guarantees one)
+    for (int j = 0; j < tableSize; j++) {
+        struct HashNode* node = hashTable[j];
+        while (node != NULL) {
+            struct HashNode* temp = node;
+            node = node->next;
+            free(temp);
+        }
+    }
+    free(hashTable);
+    
+    *returnSize = 0;
+    free(result);
+    return NULL;
+}
