@@ -1,0 +1,71 @@
+#include <stdlib.h>
+#include <string.h>
+
+// Global lookup table mapping digit keys to phone letters
+const char* PHONE_MAP[] = {
+    "",     // 0
+    "",     // 1
+    "abc",  // 2
+    "def",  // 3
+    "ghi",  // 4
+    "jkl",  // 5
+    "mno",  // 6
+    "pqrs", // 7
+    "tuv",  // 8
+    "wxyz"  // 9
+};
+
+// Helper backtracking function to build combinations recursively
+void backtrack(char* digits, int index, char* currentCombo, char** result, int* resIdx) {
+    // Base Case: If the combination length matches the input length, store it
+    if (digits[index] == '\0') {
+        currentCombo[index] = '\0';
+        result[*resIdx] = strdup(currentCombo);
+        (*resIdx)++;
+        return;
+    }
+
+    int digit = digits[index] - '0';
+    const char* letters = PHONE_MAP[digit];
+    
+    // Loop through all letters mapped to the current digit
+    for (int i = 0; letters[i] != '\0'; i++) {
+        currentCombo[index] = letters[i]; // Place letter
+        backtrack(digits, index + 1, currentCombo, result, resIdx); // Recurse
+    }
+}
+
+char** letterCombinations(char* digits, int* returnSize) {
+    int len = strlen(digits);
+    
+    // Guard Condition: Return empty array if input string is empty
+    if (len == 0) {
+        *returnSize = 0;
+        return NULL;
+    }
+
+    // Step 1: Pre-calculate total combinations to allocate correct memory size
+    int totalCombos = 1;
+    for (int i = 0; i < len; i++) {
+        int digit = digits[i] - '0';
+        if (digit == 7 || digit == 9) {
+            totalCombos *= 4; // Keys 7 and 9 hold four letters
+        } else {
+            totalCombos *= 3; // All other standard keys hold three letters
+        }
+    }
+
+    // Allocate array of string pointers for the results
+    char** result = (char**)malloc(totalCombos * sizeof(char*));
+    char* currentCombo = (char*)malloc((len + 1) * sizeof(char));
+    int resIdx = 0;
+
+    // Step 2: Kick off recursion from index 0
+    backtrack(digits, 0, currentCombo, result, &resIdx);
+
+    // Free the temporary path buffer
+    free(currentCombo);
+
+    *returnSize = totalCombos;
+    return result;
+}
