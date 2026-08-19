@@ -1,0 +1,91 @@
+#include <stdlib.h>
+
+// Helper comparison function for qsort
+int compare(const void *a, const void *b) {
+    int val1 = *(const int*)a;
+    int val2 = *(const int*)b;
+    if (val1 < val2) return -1;
+    if (val1 > val2) return 1;
+    return 0;
+}
+
+int** fourSum(int* nums, int numsSize, int target, int* returnSize, int** returnColumnSizes) {
+    *returnSize = 0;
+    *returnColumnSizes = NULL;
+    
+    // A quadruplet requires at least 4 elements
+    if (numsSize < 4) {
+        return NULL;
+    }
+    
+    // Step 1: Sort the array to allow the two-pointer strategy and duplicate skipping
+    qsort(nums, numsSize, sizeof(int), compare);
+    
+    // Allocate space for the result arrays. We'll start with a dynamic capacity.
+    int capacity = 16;
+    int** result = (int**)malloc(capacity * sizeof(int*));
+    int* colSizes = (int*)malloc(capacity * sizeof(int));
+    
+    // Step 2: First loop for the first element
+    for (int i = 0; i < numsSize - 3; i++) {
+        // Skip identical elements for the first position to avoid duplicate quadruplets
+        if (i > 0 && nums[i] == nums[i - 1]) continue;
+        
+        // Optimisation 1: If the smallest 4 elements exceed target, no solution is possible
+        if ((long long)nums[i] + nums[i + 1] + nums[i + 2] + nums[i + 3] > target) break;
+        
+        // Optimisation 2: If nums[i] plus the 3 largest elements is less than target, i is too small
+        if ((long long)nums[i] + nums[numsSize - 3] + nums[numsSize - 2] + nums[numsSize - 1] < target) continue;
+        
+        // Step 3: Second loop for the second element
+        for (int j = i + 1; j < numsSize - 2; j++) {
+            // Skip identical elements for the second position
+            if (j > i + 1 && nums[j] == nums[j - 1]) continue;
+            
+            // Optimisation 3: Check bounds with the current j element
+            if ((long long)nums[i] + nums[j] + nums[j + 1] + nums[j + 2] > target) break;
+            if ((long long)nums[i] + nums[j] + nums[numsSize - 2] + nums[numsSize - 1] < target) continue;
+            
+            // Step 4: Two-pointer technique for the remaining two elements
+            int left = j + 1;
+            int right = numsSize - 1;
+            
+            while (left < right) {
+                long long sum = (long long)nums[i] + nums[j] + nums[left] + nums[right];
+                
+                if (sum == target) {
+                    // Expand result allocation capacity if we run out of room
+                    if (*returnSize >= capacity) {
+                        capacity *= 2;
+                        result = (int**)realloc(result, capacity * sizeof(int*));
+                        colSizes = (int**)realloc(colSizes, capacity * sizeof(int));
+                    }
+                    
+                    // Allocate and populate the matching quadruplet row
+                    result[*returnSize] = (int*)malloc(4 * sizeof(int));
+                    result[*returnSize][0] = nums[i];
+                    result[*returnSize][1] = nums[j];
+                    result[*returnSize][2] = nums[left];
+                    result[*returnSize][3] = nums[right];
+                    colSizes[*returnSize] = 4;
+                    (*returnSize)++;
+                    
+                    // Move pointers and skip identical neighboring elements
+                    left++;
+                    right--;
+                    while (left < right && nums[left] == nums[left - 1]) left++;
+                    while (left < right && nums[right] == nums[right + 1]) right--;
+                } 
+                else if (sum < target) {
+                    left++;
+                } 
+                else {
+                    right--;
+                }
+            }
+        }
+    }
+    
+    *returnColumnSizes = colSizes;
+    return result;
+}
