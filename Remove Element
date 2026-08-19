@@ -1,0 +1,16 @@
+int removeElement(int* nums, int numsSize, int val) {
+    int i = 0;
+    int n = numsSize;
+
+    while (i < n) {
+        if (nums[i] == val) {
+            // Swap current element with the last active element
+            nums[i] = nums[n - 1];
+            n--; // Shrink the array bounds, but do not advance 'i' yet
+        } else {
+            i++; // Move to the next element if no swap happened
+        }
+    }
+
+    return n;
+}
