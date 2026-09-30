@@ -1,0 +1,53 @@
+#include <stdlib.h>
+
+// Helper function to swap two integers
+void swap(int* a, int* b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
+
+// Partition function using a random pivot to avoid O(N^2) worst case
+int partition(int* nums, int left, int right) {
+    // Pick a random pivot index and swap with the rightmost element
+    int pivotIdx = left + rand() % (right - left + 1);
+    swap(&nums[pivotIdx], &nums[right]);
+    
+    int pivotValue = nums[right];
+    int i = left; // Tracks the boundary of elements smaller than pivot
+    
+    for (int j = left; j < right; j++) {
+        if (nums[j] < pivotValue) {
+            swap(&nums[i], &nums[j]);
+            i++;
+        }
+    }
+    // Place pivot in its correct sorted position
+    swap(&nums[i], &nums[right]);
+    return i;
+}
+
+int findKthLargest(int* nums, int numsSize, int k) {
+    // Seed the random number generator
+    srand(12345);
+    
+    int left = 0;
+    int right = numsSize - 1;
+    
+    // The k-th largest element is at index (numsSize - k) in a sorted array
+    int targetIdx = numsSize - k;
+    
+    while (left <= right) {
+        int pivotIdx = partition(nums, left, right);
+        
+        if (pivotIdx == targetIdx) {
+            return nums[pivotIdx];
+        } else if (pivotIdx < targetIdx) {
+            left = pivotIdx + 1; // Look in the right partition
+        } else {
+            right = pivotIdx - 1; // Look in the left partition
+        }
+    }
+    
+    return -1;
+}
