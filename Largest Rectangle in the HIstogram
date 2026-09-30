@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int largestRectangleArea(int* heights, int heightsSize) {
+    if (heightsSize == 0 || heights == NULL) {
+        return 0;
+    }
+
+    // Allocate a stack to store array indices
+    int* stack = (int*)malloc(heightsSize * sizeof(int));
+    int top = -1;
+    int maxArea = 0;
+    int i = 0;
+
+    while (i < heightsSize) {
+        // Push index to stack if it's empty or current height is taller/equal
+        if (top == -1 || heights[i] >= heights[stack[top]]) {
+            stack[++top] = i;
+            i++;
+        } 
+        // Pop and calculate area when the current height is shorter
+        else {
+            int height = heights[stack[top--]];
+            // If stack is empty, this bar is the shortest seen so far; width is 'i'
+            int width = (top == -1) ? i : (i - stack[top] - 1);
+            int area = height * width;
+            
+            if (area > maxArea) {
+                maxArea = area;
+            }
+        }
+    }
+
+    // Clear out any remaining indices left in the stack
+    while (top != -1) {
+        int height = heights[stack[top--]];
+        int width = (top == -1) ? i : (i - stack[top] - 1);
+        int area = height * width;
+        
+        if (area > maxArea) {
+            maxArea = area;
+        }
+    }
+
+    // Free the dynamically allocated stack memory
+    free(stack);
+    return maxArea;
+}
