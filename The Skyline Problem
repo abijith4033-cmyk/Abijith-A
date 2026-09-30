@@ -1,0 +1,130 @@
+#include <stdlib.h>
+
+// Helper structure to cleanly pass array sizing metadata
+typedef struct {
+    int** data;
+    int size;
+} Skyline;
+
+// Dynamic constructor for creating point pairs [X, Height]
+int* createPoint(int x, int h) {
+    int* point = (int*)malloc(2 * sizeof(int));
+    point[0] = x;
+    point[1] = h;
+    return point;
+}
+
+// Deeply merges two sorted skylines into a single valid skyline
+Skyline mergeSkylines(Skyline left, Skyline right) {
+    Skyline merged;
+    // Maximum possible critical points is the sum of both sub-skylines
+    merged.data = (int**)malloc((left.size + right.size) * sizeof(int*));
+    merged.size = 0;
+
+    int i = 0, j = 0;
+    int h1 = 0, h2 = 0; // Current tracking heights for left and right sets
+
+    while (i < left.size && j < right.size) {
+        int x = 0;
+        if (left.data[i][0] < right.data[j][0]) {
+            x = left.data[i][0];
+            h1 = left.data[i][1];
+            i++;
+        } else if (left.data[i][0] > right.data[j][0]) {
+            x = right.data[j][0];
+            h2 = right.data[j][1];
+            j++;
+        } else { // X-coordinates are equal
+            x = left.data[i][0];
+            h1 = left.data[i][1];
+            h2 = right.data[j][1];
+            i++;
+            j++;
+        }
+
+        // The overall height at this critical boundary line
+        int maxH = (h1 > h2) ? h1 : h2;
+
+        // Eliminate redundant points with identical heights to prevent shadows
+        if (merged.size == 0 || merged.data[merged.size - 1][1] != maxH) {
+            // Overwrite if X positions are completely identical
+            if (merged.size > 0 && merged.data[merged.size - 1][0] == x) {
+                merged.data[merged.size - 1][1] = maxH;
+            } else {
+                merged.data[merged.size++] = createPoint(x, maxH);
+            }
+        }
+    }
+
+    // Append remaining elements from the left list
+    while (i < left.size) {
+        if (merged.size == 0 || merged.data[merged.size - 1][1] != left.data[i][1]) {
+            merged.data[merged.size++] = createPoint(left.data[i][0], left.data[i][1]);
+        }
+        i++;
+    }
+
+    // Append remaining elements from the right list
+    while (j < right.size) {
+        if (merged.size == 0 || merged.data[merged.size - 1][1] != right.data[j][1]) {
+            merged.data[merged.size++] = createPoint(right.data[j][0], right.data[j][1]);
+        }
+        j++;
+    }
+
+    return merged;
+}
+
+// Recursive function to split and conquer buildings
+Skyline divideAndConquer(int** buildings, int start, int end) {
+    Skyline res;
+    if (start > end) {
+        res.data = NULL;
+        res.size = 0;
+        return res;
+    }
+    
+    // Base Case: A single building converts into exactly 2 critical points
+    if (start == end) {
+        res.data = (int**)malloc(2 * sizeof(int*));
+        res.data[0] = createPoint(buildings[start][0], buildings[start][2]); // Start
+        res.data[1] = createPoint(buildings[start][1], 0);                   // End
+        res.size = 2;
+        return res;
+    }
+
+    int mid = start + (end - start) / 2;
+    Skyline left = divideAndConquer(buildings, start, mid);
+    Skyline right = divideAndConquer(buildings, mid + 1, end);
+
+    Skyline merged = mergeSkylines(left, right);
+
+    // Free intermediate results memory from recursive call stacks
+    for (int k = 0; k < left.size; k++) free(left.data[k]);
+    if (left.data) free(left.data);
+    for (int k = 0; k < right.size; k++) free(right.data[k]);
+    if (right.data) free(right.data);
+
+    return merged;
+}
+
+// Main execution function required by platform
+int** getSkyline(int** buildings, int buildingsSize, int* buildingsColSize, int* returnSize, int** returnColumnSizes) {
+    if (buildings == NULL || buildingsSize == 0) {
+        *returnSize = 0;
+        *returnColumnSizes = NULL;
+        return NULL;
+    }
+
+    Skyline finalSkyline = divideAndConquer(buildings, 0, buildingsSize - 1);
+
+    *returnSize = finalSkyline.size;
+    
+    // Allocate the companion configuration array tracking individual item width metrics
+    *returnColumnSizes = (int*)malloc(finalSkyline.size * sizeof(int));
+    for (int i = 0; i < finalSkyline.size; i++) {
+        (*returnColumnSizes)[i] = 2;
+    }
+
+    return finalSkyline.data;
+}
