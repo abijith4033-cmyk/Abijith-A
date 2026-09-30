@@ -1,0 +1,85 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+// --- Standard Stack Implementation ---
+typedef struct {
+    int* data;
+    int top;
+    int capacity;
+} Stack;
+
+Stack* stackCreate(int capacity) {
+    Stack* s = (Stack*)malloc(sizeof(Stack));
+    s->data = (int*)malloc(capacity * sizeof(int));
+    s->top = -1;
+    s->capacity = capacity;
+    return s;
+}
+
+void stackPush(Stack* s, int x) {
+    s->data[++(s->top)] = x;
+}
+
+int stackPop(Stack* s) {
+    return s->data[(s->top)--];
+}
+
+int stackPeek(Stack* s) {
+    return s->data[s->top];
+}
+
+bool stackEmpty(Stack* s) {
+    return s->top == -1;
+}
+
+void stackFree(Stack* s) {
+    free(s->data);
+    free(s);
+}
+
+// --- MyQueue Implementation (Using 2 Stacks) ---
+typedef struct {
+    Stack* inputStack;
+    Stack* outputStack;
+} MyQueue;
+
+MyQueue* myQueueCreate() {
+    MyQueue* queue = (MyQueue*)malloc(sizeof(MyQueue));
+    // Constraints usually bound operations to 100 max per test case
+    queue->inputStack = stackCreate(100); 
+    queue->outputStack = stackCreate(100);
+    return queue;
+}
+
+void myQueuePush(MyQueue* obj, int x) {
+    stackPush(obj->inputStack, x);
+}
+
+// Helper function to shift elements from inputStack to outputStack
+void shiftStacks(MyQueue* obj) {
+    if (stackEmpty(obj->outputStack)) {
+        while (!stackEmpty(obj->inputStack)) {
+            stackPush(obj->outputStack, stackPop(obj->inputStack));
+        }
+    }
+}
+
+int myQueuePop(MyQueue* obj) {
+    shiftStacks(obj);
+    return stackPop(obj->outputStack);
+}
+
+int myQueuePeek(MyQueue* obj) {
+    shiftStacks(obj);
+    return stackPeek(obj->outputStack);
+}
+
+bool myQueueEmpty(MyQueue* obj) {
+    return stackEmpty(obj->inputStack) && stackEmpty(obj->outputStack);
+}
+
+void myQueueFree(MyQueue* obj) {
+    stackFree(obj->inputStack);
+    stackFree(obj->outputStack);
+    free(obj);
+}
