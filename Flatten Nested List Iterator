@@ -1,0 +1,57 @@
+#include <stdbool.h>
+#include <stdlib.h>
+
+// --- Struct Definition ---
+struct NestedIterator {
+    int* data;      // Array to store flattened integers
+    int size;       // Total number of elements in data
+    int index;      // Current reading index position
+};
+
+// --- Recursive Helper to Flatten the List ---
+void flatten(struct NestedInteger** list, int size, struct NestedIterator* iter) {
+    for (int i = 0; i < size; i++) {
+        if (NestedIntegerIsInteger(list[i])) {
+            // Dynamically allocate or expand the internal data storage array
+            iter->data = (int*)realloc(iter->data, (iter->size + 1) * sizeof(int));
+            iter->data[iter->size] = NestedIntegerGetInteger(list[i]);
+            iter->size++;
+        } else {
+            // Recursively flatten nested sublists
+            struct NestedInteger** subList = NestedIntegerGetList(list[i]);
+            int subListSize = NestedIntegerGetListSize(list[i]);
+            flatten(subList, subListSize, iter);
+        }
+    }
+}
+
+// --- Iterator API Methods ---
+
+struct NestedIterator *nestedIterCreate(struct NestedInteger** nestedList, int nestedListSize) {
+    struct NestedIterator *iter = (struct NestedIterator*)malloc(sizeof(struct NestedIterator));
+    iter->data = NULL;
+    iter->size = 0;
+    iter->index = 0;
+    
+    // Flatten the entire structure at the very start
+    flatten(nestedList, nestedListSize, iter);
+    
+    return iter;
+}
+
+bool nestedIterHasNext(struct NestedIterator *iter) {
+    // Returns true if there are more integers left to read
+    return iter->index < iter->size;
+}
+
+int nestedIterNext(struct NestedIterator *iter) {
+    // Return the current integer and advance the position index pointer
+    return iter->data[iter->index++];
+}
+
+void nestedIterFree(struct NestedIterator *iter) {
+    if (iter) {
+        free(iter->data);
+        free(iter);
+    }
+}
