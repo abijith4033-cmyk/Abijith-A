@@ -1,0 +1,65 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Helper structure to manage dynamic growth of the output array
+typedef struct {
+    char** data;
+    int size;
+    int capacity;
+} ResultList;
+
+// Backtracking helper function
+void backtrack(ResultList* list, char* current, int open, int close, int max) {
+    // Base Case: If the string reaches the target length, add it to the list
+    if (open == max && close == max) {
+        // Resize the array dynamically if it reaches full capacity
+        if (list->size >= list->capacity) {
+            list->capacity *= 2;
+            list->data = realloc(list->data, list->capacity * sizeof(char*));
+        }
+        // Duplicate the current string configuration into the results array
+        list->data[list->size] = strdup(current);
+        list->size++;
+        return;
+    }
+
+    // Determine current index position in the string
+    int idx = open + close;
+
+    // Branch 1: Add an open parenthesis if we haven't reached the limit 'n'
+    if (open < max) {
+        current[idx] = '(';
+        current[idx + 1] = '\0'; // Temporary null terminator for standard string safety
+        backtrack(list, current, open + 1, close, max);
+    }
+
+    // Branch 2: Add a close parenthesis if it doesn't break balance rules
+    if (close < open) {
+        current[idx] = ')';
+        current[idx + 1] = '\0';
+        backtrack(list, current, open, close + 1, max);
+    }
+}
+
+char** generateParenthesis(int n, int* returnSize) {
+    ResultList list;
+    list.size = 0;
+    list.capacity = 16; // Initial small chunk allocation size
+    list.data = malloc(list.capacity * sizeof(char*));
+
+    // Allocate memory buffer for the active backtracking string path
+    // Length is 2 * n (for brackets) + 1 (for the string null terminator '\0')
+    char* current = malloc((2 * n + 1) * sizeof(char));
+    current[0] = '\0';
+
+    // Start backtracking from an empty state
+    backtrack(&list, current, 0, 0, n);
+
+    // Free the tracking temporary string space
+    free(current);
+
+    // Output variables back to caller
+    *returnSize = list.size;
+    return list.data;
+}
