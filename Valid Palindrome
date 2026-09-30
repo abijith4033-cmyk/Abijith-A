@@ -1,0 +1,31 @@
+#include <stdbool.h>
+#include <ctype.h>
+#include <string.h>
+
+bool isPalindrome(char* s) {
+    // Initialize pointers at the beginning and the end of the string
+    int left = 0;
+    int right = strlen(s) - 1;
+    
+    while (left < right) {
+        // Move the left pointer if the character is not alphanumeric
+        while (left < right && !isalnum((unsigned char)s[left])) {
+            left++;
+        }
+        // Move the right pointer if the character is not alphanumeric
+        while (left < right && !isalnum((unsigned char)s[right])) {
+            right--;
+        }
+        
+        // Compare lowercase variations of both characters
+        if (tolower((unsigned char)s[left]) != tolower((unsigned char)s[right])) {
+            return false;
+        }
+        
+        // Step closer to the center
+        left++;
+        right--;
+    }
+    
+    return true;
+}
