@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Custom comparator function for qsort
+int compare(const void* a, const void* b) {
+    char s1_s2[40];
+    char s2_s1[40];
+    
+    const char* str1 = *(const char**)a;
+    const char* str2 = *(const char**)b;
+    
+    // Concatenate str1 + str2
+    strcpy(s1_s2, str1);
+    strcat(s1_s2, str2);
+    
+    // Concatenate str2 + str1
+    strcpy(s2_s1, str2);
+    strcat(s2_s1, str1);
+    
+    // Sort descending: compare s2+s1 with s1+s2
+    return strcmp(s2_s1, s1_s2);
+}
+
+char* largestNumber(int* nums, int numsSize) {
+    if (nums == NULL || numsSize == 0) {
+        return "";
+    }
+
+    // Step 1: Allocate memory for array of strings
+    char** str_nums = (char**)malloc(numsSize * sizeof(char*));
+    int total_len = 0;
+    
+    for (int i = 0; i < numsSize; i++) {
+        str_nums[i] = (char*)malloc(12 * sizeof(char)); // Enough for 32-bit int
+        sprintf(str_nums[i], "%d", nums[i]);
+        total_len += strlen(str_nums[i]);
+    }
+
+    // Step 2: Sort strings based on custom concatenation rules
+    qsort(str_nums, numsSize, sizeof(char*), compare);
+
+    // Step 3: Handle edge case where the largest number is "0"
+    if (strcmp(str_nums[0], "0") == 0) {
+        // Free allocated memory
+        for (int i = 0; i < numsSize; i++) {
+            free(str_nums[i]);
+        }
+        free(str_nums);
+        
+        char* result = (char*)malloc(2 * sizeof(char));
+        strcpy(result, "0");
+        return result;
+    }
+
+    // Step 4: Combine the sorted strings into the final result string
+    char* result = (char*)malloc((total_len + 1) * sizeof(char));
+    result[0] = '\0';
+    
+    for (int i = 0; i < numsSize; i++) {
+        strcat(result, str_nums[i]);
+        free(str_nums[i]); // Free individual string element
+    }
+    
+    free(str_nums); // Free pointer array
+    return result;
+}
